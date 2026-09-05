@@ -56,7 +56,20 @@ with st.sidebar:
 
     elif input_method == "✉️ Conectar con Gmail":
         st.markdown("**Sincronización con Gmail API:**")
+        
+        with st.expander("❓ ¿Cómo obtener tus credenciales?", expanded=False):
+            st.markdown("""
+            1. Ve a [Google Cloud Console](https://console.cloud.google.com/) y crea un proyecto.
+            2. En **APIs & Services**, habilita la **Gmail API**.
+            3. En **OAuth consent screen**, elige tipo *External*, añade tu email en *Test users* y el scope `gmail.readonly`.
+            4. En **Credentials** > **Create Credentials** > **OAuth client ID**, elige **Desktop app**.
+            5. Descarga el archivo JSON, renómbralo a `credentials.json` y súbelo aquí abajo o colócalo en la raíz del proyecto.
+            
+            *(Consulta `GMAIL_MCP_SETUP.md` para el instructivo detallado).*
+            """)
+
         creds_exist = os.path.exists("credentials.json") or os.path.exists("token.json")
+
         
         if not creds_exist:
             st.info(
