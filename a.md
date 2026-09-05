@@ -1,67 +1,60 @@
-# Guía de Proyecto: `pet-client-responses`
+# Project Guide: `pet-client-responses`
 
-Panel de control interactivo para procesar notificaciones por correo de Rover, diagnosticar escenarios de servicio al cliente y generar respuestas bilingües de 5 estrellas para dueños de mascotas.
+Interactive response hub and communication advisor for Rover pet care professionals to process incoming client messages, diagnose scenarios with an impact traffic light, and generate 5-star customer service responses.
 
 ---
 
-## 1. Arquitectura y Visión General del Sistema
+## 1. Architecture and System Overview
 
-El flujo de trabajo automatiza la ingesta de correos de Rover y ofrece un panel (*dashboard*) interactivo para revisar interacciones y redactar respuestas con traducción en vivo:
+The workflow processes incoming Rover notifications and inquiries, providing an interactive dashboard:
 
+```text
+[Rover Email / Notification]
+            │
+            ▼
+   [Gmail API / MCP Server]
+            │
+            ▼
+[Diagnostic Engine (pet-client-responses)]
+            │
+    ┌───────┴───────┐
+    ▼               ▼
+[Impact Traffic] [Response Generator]
+[Light Strategy] [Concise / Warm Options]
+    │               │
+    └───────┬───────┘
+            ▼
+  [Interactive UI / Streamlit]
+```
 
-\[Notificación de Rover en Gmail\] │ ▼ \[Servidor MCP de Correo / API\] │ ▼ \[Motor de Diagnóstico (pet-client-responses)\] │ ┌────────┴────────┐ ▼ ▼ \[Semáforo Estratégico\] \[Traductor & Generador Bilingüe\] │ │ └────────┬────────┘ ▼ \[Panel Interactivo / UI\]
+---
 
-\--- ## 2. Estructura de Directorios Crea el espacio de trabajo con la siguiente estructura modular: \`\`\`text pet-client-responses/ ├── config/ │ ├── rules.json # Reglas de la Gema y parámetros del sistema │ └── mcp\_settings.json # Configuración del servidor MCP de Gmail ├── src/ │ ├── mail\_listener.py # Ingesta y parseo de correos de Rover │ ├── analyzer.py # Diagnóstico, semáforo y lógica de las 3 preguntas │ ├── generator.py # Generación de respuestas (Opción A y Opción B) │ └── app.py # Interfaz gráfica interactiva (Streamlit / Panel) ├── templates/ │ └── daily\_updates.md # Plantillas para Rover Cards y reportes diarios ├── .env.example # Plantilla de variables de entorno ├── requirements.txt # Dependencias de Python └── README.md # Documentación de uso
+## 2. Directory Structure
 
-## 3\. Configuración de Reglas y Directrices (`config/rules.json`)
+```text
+pet-client-responses/
+├── config/
+│   ├── rules.json          # 5-star guidelines and parameters
+│   └── mcp_settings.json   # MCP configuration for Gmail / Rover
+├── src/
+│   ├── mail_listener.py    # Rover email ingestion and parser
+│   ├── analyzer.py         # Diagnostic logic, traffic light, and clarification questions
+│   └── app.py              # Interactive Streamlit web application
+├── Dockerfile              # Container definition with uv
+├── docker-compose.yml      # Multi-container orchestration
+├── .dockerignore           # Excluded files from Docker build
+├── pyproject.toml          # Project metadata and dependencies
+├── uv.lock                 # Deterministic dependency lockfile
+├── requirements.txt        # Pip fallback dependencies
+├── GMAIL_MCP_SETUP.md      # Step-by-step Gmail & MCP credentials guide
+└── README.md               # Main project documentation
+```
 
-Este archivo almacena la identidad y el protocolo de comunicación derivado de la Gema:
+---
 
-## 3\. Configuración de Reglas y Directrices (`config/rules.json`)
+## 3. Configuration & Guidelines (`config/rules.json`)
 
-Este archivo almacena la identidad y el protocolo de comunicación derivado de la Gema:
-
-## 4\. Instalación y Dependencias
-
-Crea y activa un entorno virtual en Python (`venv`):
-
-Bash
-
-    python -m venv .venv
-    source .venv/bin/activate  # En Linux/macOS/WSL2
-    # .venv\Scripts\activate   # En Windows PowerShell
-
-    Crea el archivo `requirements.txt`:
-
-streamlit>=1.35.0
-pydantic>=2.7.0
-google-api-python-client>=2.120.0
-google-auth-oauthlib>=1.2.0
-python-dotenv>=1.0.1
-rich>=13.7.1
-
-## 5\. Implementación del Núcleo
-
-### 5.1. Analizador y Generador (`src/analyzer.py`)
-
-Contiene la lógica de evaluación bajo el protocolo de la Gema:
-
-### 5.2. Panel Interactivo (`src/app.py`)
-
-Interfaz visual en Streamlit para gestionar correos entrantes, visualizar el diagnóstico del semáforo y traducir mensajes en tiempo real:
-
-## 6\. Ejecución del Panel
-
-Para iniciar la interfaz interactiva, ejecuta desde la raíz del proyecto:
-
-Bash 
-streamlit run src/app.py
-El navegador abrirá automáticamente la URL local (usualmente `http://localhost:8501`).
-
-## 7\. Protocolo de Calidad de Servicio al Cliente
-
-*   🔴 **Evitar:** Responder a la defensiva, diagnosticar cuadros médicos, emitir juicios sobre el entrenamiento de la mascota o comprometerse a horarios sin confirmación previa.
-    
-*   🟡 **Monitorear:** Cambios menores de humor, diferencias de apetito o rechazo a premios habituales. Registrar siempre con fotos de soporte.
-    
-*   🟢 **Priorizar:** Notificar a tiempo con tono afable, adjuntar material visual de calidad y agradecer la confianza del dueño al cierre de cada interacción.
+Defines identity, tone, and communication standards:
+- 🔴 **Avoid:** Sounding defensive, offering veterinary diagnoses, criticizing pet behaviors, or promising unverified schedules.
+- 🟡 **Monitor:** Subtle mood changes, appetite variations, and sensitivity, documenting with photos.
+- 🟢 **Priorizar:** Prompt notifications with warmth, high-quality media updates, and heartfelt appreciation.

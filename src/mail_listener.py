@@ -1,6 +1,6 @@
 """
 mail_listener.py
-Módulo para ingesta y parseo de correos de Rover desde Gmail API o entrada directa.
+Module for Rover email ingestion and parsing from Gmail API or direct text paste.
 """
 
 import os
@@ -20,15 +20,15 @@ class RoverMessage(BaseModel):
 
 def parse_rover_notification(raw_email_text: str, source: str = "direct") -> RoverMessage:
     """
-    Parsea el contenido de una notificación o mensaje de Rover para extraer
-    el nombre del dueño, el nombre de la mascota y el mensaje principal.
-    Soporta formatos comunes de emails de Rover o mensajes copiados y pegados.
+    Parses notification or message content from Rover to extract
+    the owner's name, pet's name, and the main message body.
+    Supports standard Rover email formats and copied chat snippets.
     """
     text = raw_email_text.strip()
     
-    # 1. Buscar nombre del dueño
+    # 1. Search for owner name
     owner_match = re.search(
-        r"(?:from|message from|de|mensaje de|owner|client|dueño):\s*([A-Za-zÀ-ÿ]+)|(?:from|de)\s+([A-Za-zÀ-ÿ]+)\b",
+        r"(?:from|message from|owner|client):\s*([A-Za-z]+)|(?:from)\s+([A-Za-z]+)\b",
         text,
         re.IGNORECASE
     )
@@ -36,14 +36,13 @@ def parse_rover_notification(raw_email_text: str, source: str = "direct") -> Rov
     if owner_match:
         client_name = (owner_match.group(1) or owner_match.group(2)).strip().capitalize()
     else:
-        # Intento de capturar al inicio como "Sarah:" o "Sarah -"
-        prefix_match = re.match(r"^([A-Za-zÀ-ÿ]{2,15})[:\s-]", text)
+        prefix_match = re.match(r"^([A-Za-z]{2,15})[:\s-]", text)
         if prefix_match:
             client_name = prefix_match.group(1).capitalize()
 
-    # 2. Buscar nombre de la mascota
+    # 2. Search for pet name
     pet_match = re.search(
-        r"(?:for|regarding|about|sobre|mascota|pet|dog|perro):\s*([A-Za-zÀ-ÿ]+)|(?:for|regarding|about|sobre)\s+([A-Za-zÀ-ÿ]+)\b",
+        r"(?:for|regarding|about|pet|dog):\s*([A-Za-z]+)|(?:for|regarding|about)\s+([A-Za-z]+)\b",
         text,
         re.IGNORECASE
     )
@@ -51,10 +50,9 @@ def parse_rover_notification(raw_email_text: str, source: str = "direct") -> Rov
     if pet_match:
         pet_name = (pet_match.group(1) or pet_match.group(2)).strip().capitalize()
 
-    # 3. Limpiar el cuerpo del mensaje si viene con cabeceras de email
+    # 3. Clean email header prefixes if present
     clean_body = text
-    # Si contiene separadores típicos de emails
-    body_match = re.search(r"(?:Subject|Asunto):.*?\n\n(.*)", text, re.DOTALL | re.IGNORECASE)
+    body_match = re.search(r"(?:Subject):\s*.*?\n\n(.*)", text, re.DOTALL | re.IGNORECASE)
     if body_match:
         clean_body = body_match.group(1).strip()
 
@@ -68,8 +66,8 @@ def parse_rover_notification(raw_email_text: str, source: str = "direct") -> Rov
 
 def fetch_messages_from_gmail(credentials_path: str = "credentials.json", token_path: str = "token.json", max_results: int = 5) -> List[RoverMessage]:
     """
-    Se conecta a la API de Gmail usando OAuth2 para recuperar correos recientes de Rover.
-    Requiere que credentials.json o token.json estén configurados.
+    Connects to the Gmail API via OAuth2 to retrieve recent Rover emails.
+    Requires credentials.json or token.json to be present.
     """
     try:
         from google.oauth2.credentials import Credentials
@@ -95,7 +93,6 @@ def fetch_messages_from_gmail(credentials_path: str = "credentials.json", token_
                 return []
 
         service = build('gmail', 'v1', credentials=creds)
-        # Buscar correos de Rover
         query = "from:rover.com OR subject:Rover"
         results = service.users().messages().list(userId='me', q=query, maxResults=max_results).execute()
         messages = results.get('messages', [])
@@ -108,7 +105,6 @@ def fetch_messages_from_gmail(credentials_path: str = "credentials.json", token_
             headers = msg_data.get('payload', {}).get('headers', [])
             subject = next((h['value'] for h in headers if h['name'].lower() == 'subject'), 'Rover Message')
             
-            # Obtener cuerpo si es posible
             body = snippet
             payload = msg_data.get('payload', {})
             if 'parts' in payload:
@@ -126,5 +122,11 @@ def fetch_messages_from_gmail(credentials_path: str = "credentials.json", token_
         return rover_msgs
 
     except Exception as e:
-        print(f"Error al conectar con Gmail API: {e}")
+        print(f"Error connecting to Gmail API: {e}")
         return []
+
+if __name__ == "__main__":
+    sample = "From Sarah regarding Charlie: Hi! Charlie has a sensitive stomach today, please keep an eye on him."
+    parsed = parse_rover_notification(sample)
+    print("Rover Notification Parsed:")
+    print(parsed.model_dump_json(indent=2))

@@ -3,26 +3,26 @@
   "tone": "Warm, confident, casual yet polished, empathetic, 5-star standard",
   "guidelines": {
     "red_avoid": [
-      "No sonar a la defensiva ni excusarse",
-      "No diagnosticar cuadros médicos ni recomendar medicación no prescrita",
-      "No criticar ni juzgar el entrenamiento o conducta previa de la mascota",
-      "No comprometerse a horarios o servicios extra sin confirmación previa"
+      "Do not sound defensive or offer unsolicited excuses",
+      "Do not diagnose medical conditions or recommend unprescribed medication",
+      "Do not criticize or judge the pet's prior training or behavior",
+      "Do not commit to unconfirmed schedules or unapproved extra services"
     ],
     "yellow_monitor": [
-      "Cambios menores de apetito o digestión sensible",
-      "Leve timidez, energía baja o cambios en la rutina de paseos",
-      "Monitorear lenguaje corporal y registrar siempre con fotos de soporte"
+      "Minor changes in appetite or sensitive digestion",
+      "Slight shyness, lower energy, or variations during walks",
+      "Carefully monitor body language and always record with supporting photos"
     ],
     "green_prioritize": [
-      "Notificar oportunamente con tono proactivo y afable",
-      "Adjuntar material visual de calidad (fotos/videos felices)",
-      "Agradecer la confianza del dueño al cierre de cada interacción",
-      "Brindar tranquilidad con un plan de acción claro y seguro"
+      "Send timely updates with a proactive, warm, and friendly tone",
+      "Attach high-quality visual updates (clear, happy photos and clips)",
+      "Thank the owner for their trust at the close of every message",
+      "Provide reassurance with a clear, safe, and positive plan of action"
     ]
   },
   "default_clarification_questions": [
-    "¿Tiene la mascota antecedentes médicos o sensibilidad conocida relevante para este caso?",
-    "¿Cuáles son las instrucciones específicas de alimentación, medicación o contacto de emergencia?",
-    "¿Cuál es el canal y nivel de frecuencia preferido por el dueño para recibir actualizaciones?"
+    "Does the pet have any known medical background or relevant allergies for this visit?",
+    "Are there specific feeding, medication, or emergency veterinarian instructions?",
+    "What is the owner's preferred update frequency and communication channel?"
   ]
 }

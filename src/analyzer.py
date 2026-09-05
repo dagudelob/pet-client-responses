@@ -13,38 +13,44 @@ def load_rules() -> Dict[str, Any]:
             pass
     return {
         "guidelines": {
-            "red_avoid": ["Evitar respuestas a la defensiva o diagnósticos médicos."],
-            "yellow_monitor": ["Monitorear cambios leves de humor, apetito o digestión."],
-            "green_prioritize": ["Notificar a tiempo con tono cálido y fotos de soporte."]
+            "red_avoid": ["Do not sound defensive or diagnose medical conditions."],
+            "yellow_monitor": ["Monitor slight mood shifts, appetite, or sensitive stomach."],
+            "green_prioritize": ["Send timely updates with a warm tone and high-quality photo proofs."]
         },
         "default_clarification_questions": [
-            "¿Presenta algún síntoma adicional o antecedente médico reciente?",
-            "¿Hay indicaciones de dieta especial o veterinario de preferencia?",
-            "¿Prefiere actualizaciones por foto o texto breve en cada paseo?"
+            "Does the pet have any additional symptoms or recent medical history?",
+            "Are there specific dietary restrictions or a preferred emergency vet?",
+            "Do you prefer photo updates or short text summaries during each visit?"
         ]
     }
 
 def evaluate_incident(message: str) -> Dict[str, Any]:
     """
-    Analiza el mensaje entrante del dueño de mascota o notificación de Rover,
-    clasificando el nivel de riesgo y generando estrategia de semáforo y respuestas.
+    Analyzes incoming Rover customer messages/notifications,
+    classifies the risk level, and generates the traffic light strategy and response options.
     """
     rules = load_rules()
     msg_lower = (message or "").lower()
 
-    # Detectar palabras clave de alerta
-    is_health_issue = any(k in msg_lower for k in ["stomach", "vomit", "sick", "diarrhea", "pain", "limp", "blood", "medication", "pill", "estómago", "vómito", "enfermo"])
-    is_schedule_issue = any(k in msg_lower for k in ["late", "time", "hour", "key", "delay", "cancel", "tarde", "hora", "cancelar", "llave"])
-    is_behavior_issue = any(k in msg_lower for k in ["bark", "bite", "aggressive", "scared", "shy", "fear", "ladra", "muerde", "miedo"])
+    # Detect incident keywords
+    is_health_issue = any(k in msg_lower for k in [
+        "stomach", "vomit", "sick", "diarrhea", "pain", "limp", "blood", "medication", "pill", "tummy", "vet"
+    ])
+    is_schedule_issue = any(k in msg_lower for k in [
+        "late", "time", "hour", "key", "delay", "cancel", "lockbox", "arrive", "early"
+    ])
+    is_behavior_issue = any(k in msg_lower for k in [
+        "bark", "bite", "aggressive", "scared", "shy", "fear", "anxious", "nervous", "pull"
+    ])
 
     if is_health_issue:
-        red_text = "🔴 **Evitar:** No des diagnósticos veterinarios, no minimices el síntoma ni des alimentos o premios fuera de su dieta autorizada."
-        yellow_text = "🟡 **Monitorear:** Vigilar hidratación, deposiciones, niveles de energía y cualquier cambio conductual súbito."
-        green_text = "🟢 **Priorizar:** Confirmar recepción del aviso, tranquilidad inmediata, reportar con fotos claras y solicitar contacto del veterinario si empeora."
+        red_text = "🔴 **Avoid:** Do not attempt veterinary diagnoses, do not downplay symptoms, and avoid unauthorized treats or medication."
+        yellow_text = "🟡 **Monitor:** Keep close track of hydration, bathroom routines, energy levels, and any abrupt behavioral changes."
+        green_text = "🟢 **Prioritize:** Acknowledge promptly with immediate reassurance, share clear photo updates, and ask for vet emergency info if symptoms persist."
         clarifications = [
-            "¿Ha tenido vómitos, diarrea o inapetencia antes del paseo o en horas recientes?",
-            "¿Tiene medicamentos prescritos o instrucciones veterinarias de emergencia?",
-            "¿Hay premios o alimentos específicos autorizados para hoy?"
+            "Has the pet experienced vomiting, diarrhea, or appetite loss prior to the visit?",
+            "Are there prescribed emergency medications or specific vet care instructions?",
+            "Are there authorized treats or a strict sensitive-diet protocol for today?"
         ]
         option_a = (
             "Hi [Owner's Name]! Thank you for letting me know about [Pet's Name]'s sensitive tummy. "
@@ -58,13 +64,13 @@ def evaluate_incident(message: str) -> Dict[str, Any]:
             "I'll send you a detailed update with photos as soon as we finish. Please feel free to share any veterinary notes if needed! 🐾"
         )
     elif is_behavior_issue:
-        red_text = "🔴 **Evitar:** No confrontar a la mascota, no forzar interacciones con otros perros ni asumir riesgos en la vía pública."
-        yellow_text = "🟡 **Monitorear:** Lenguaje corporal (orejas, cola, postura de alerta), distancia de estímulos y tolerancia a ruidos."
-        green_text = "🟢 **Priorizar:** Mantener distancia segura, usar refuerzo positivo y transmitir paciencia y confianza al dueño."
+        red_text = "🔴 **Avoid:** Do not confront the pet, force interactions with other dogs, or take unnecessary public sidewalk risks."
+        yellow_text = "🟡 **Monitor:** Observe body language (ears, tail, posture alerts), distance from stimuli, and sensitivity to loud noises."
+        green_text = "🟢 **Prioritize:** Maintain safe distance, apply positive reinforcement, and reassure the pet parent with calm patience."
         clarifications = [
-            "¿Cuáles son sus detonantes habituales (perros grandes, bicicletas, personas extrañas)?",
-            "¿Qué recompensas o comandos de redirección le funcionan mejor en momentos de estrés?",
-            "¿Prefiere una ruta tranquila y con baja afluencia para este paseo?"
+            "What are their primary triggers (large dogs, bikes, loud traffic, strangers)?",
+            "What rewards or redirection commands work best when they feel stressed?",
+            "Would you prefer a quiet, low-traffic route for today's walk?"
         ]
         option_a = (
             "Hi [Owner's Name]! Got it. I will keep [Pet's Name] on a short, comfortable leash and stick to quiet areas to keep things calm and stress-free. "
@@ -76,13 +82,13 @@ def evaluate_incident(message: str) -> Dict[str, Any]:
             "I'll keep you posted with photos and notes on how he responded. Thanks for trusting me with his care! 🐾"
         )
     elif is_schedule_issue:
-        red_text = "🔴 **Evitar:** Comprometerse a horarios imposibles o dejar de responder ante imprevistos."
-        yellow_text = "🟡 **Monitorear:** Tiempos de desplazamiento, disponibilidad del dueño y entrega o recepción de llaves/códigos."
-        green_text = "🟢 **Priorizar:** Confirmar la hora exacta estimada de llegada (ETA) y mantener comunicación proactiva y transparente."
+        red_text = "🔴 **Avoid:** Overpromising unrealistic arrival times or delaying communication when unexpected bottlenecks occur."
+        yellow_text = "🟡 **Monitor:** Transit delays, owner availability, and lockbox/entry access instructions."
+        green_text = "🟢 **Prioritize:** Confirm an exact estimated time of arrival (ETA) and maintain transparent, proactive communication."
         clarifications = [
-            "¿El acceso es por caja de llaves (lockbox), conserjería o entrega presencial?",
-            "¿Hay flexibilidad de +/- 15 minutos en el horario de inicio?",
-            "¿Requiere confirmación inmediata al entrar y salir del domicilio?"
+            "Is property access via lockbox, concierge/front desk, or in-person greeting?",
+            "Is there a +/- 15 minute flexible window for today's arrival?",
+            "Would you like immediate entry and exit check-in notifications?"
         ]
         option_a = (
             "Hi [Owner's Name]! Thanks for the update regarding the schedule. "
@@ -94,13 +100,13 @@ def evaluate_incident(message: str) -> Dict[str, Any]:
             "Looking forward to seeing him! 🐾"
         )
     else:
-        red_text = "🔴 **Evitar:** " + rules["guidelines"]["red_avoid"][0]
-        yellow_text = "🟡 **Monitorear:** " + rules["guidelines"]["yellow_monitor"][0]
-        green_text = "🟢 **Priorizar:** " + rules["guidelines"]["green_prioritize"][0]
+        red_text = "🔴 **Avoid:** " + rules["guidelines"]["red_avoid"][0]
+        yellow_text = "🟡 **Monitor:** " + rules["guidelines"]["yellow_monitor"][0]
+        green_text = "🟢 **Prioritize:** " + rules["guidelines"]["green_prioritize"][0]
         clarifications = rules.get("default_clarification_questions", [
-            "¿Hay alguna indicación o rutina específica a considerar hoy?",
-            "¿Disponibilidad de agua fresca y ubicación de accesorios lista?",
-            "¿Algún detalle extra sobre el estado de ánimo o energía de la mascota?"
+            "Are there any specific daily routines or instructions for today's visit?",
+            "Are fresh water and walking gear readily accessible near the entrance?",
+            "Any additional notes regarding your pet's mood or energy level today?"
         ])
         option_a = (
             "Hi [Owner's Name]! Thanks for your message. Everything is all set for [Pet's Name]. "

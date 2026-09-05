@@ -1,7 +1,7 @@
 [project]
 name = "pet-client-responses"
 version = "0.1.0"
-description = "Panel interactivo y motor de respuestas 5 estrellas para clientes de Rover con MCP e IA"
+description = "Interactive response hub and 5-star communication assistant for Rover client inquiries using MCP and AI"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -19,4 +19,3 @@ build-backend = "hatchling.build"
 
 [tool.uv]
 package = false
-

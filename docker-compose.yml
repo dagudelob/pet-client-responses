@@ -1,0 +1,17 @@
+services:
+  rover-client-hub:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rover-client-hub
+    ports:
+      - "8501:8501"
+    environment:
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_HEADLESS=true
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+    restart: unless-stopped
+    volumes:
+      # Optional: mount credentials and tokens if present on host
+      - ./credentials.json:/app/credentials.json:ro
+      - ./token.json:/app/token.json:rw

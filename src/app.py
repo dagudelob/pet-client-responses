@@ -6,14 +6,13 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from analyzer import evaluate_incident
 from mail_listener import parse_rover_notification, fetch_messages_from_gmail
 
-
 st.set_page_config(
     page_title="Rover Client Response Hub",
     page_icon="🐾",
     layout="wide"
 )
 
-# Inicializar estado en sesión si no existe
+# Initialize session state
 if "client_name" not in st.session_state:
     st.session_state.client_name = "Sarah"
 if "pet_name" not in st.session_state:
@@ -24,90 +23,87 @@ if "email_snippet" not in st.session_state:
     )
 
 st.title("🐾 Rover Client Assistant & Response Hub")
-st.caption("Asesor de comunicación y servicio al cliente de 5 estrellas para Rover")
+st.caption("5-Star customer service communication advisor for Rover pet care professionals")
 
-# Barra lateral: Ingesta de Correo (Gmail o Copiar y Pegar)
+# Sidebar: Rover message ingestion (Gmail or Copy & Paste)
 with st.sidebar:
-    st.header("📬 Ingesta de Mensajes de Rover")
+    st.header("📬 Rover Message Ingestion")
     
     input_method = st.radio(
-        "Método de Entrada:",
-        ["📋 Pegar Texto / Copiar y Pegar", "✉️ Conectar con Gmail"],
+        "Ingestion Method:",
+        ["📋 Paste Message / Chat", "✉️ Connect with Gmail"],
         index=0
     )
 
-    if input_method == "📋 Pegar Texto / Copiar y Pegar":
-        st.markdown("**Pega la conversación o notificación de Rover:**")
+    if input_method == "📋 Paste Message / Chat":
+        st.markdown("**Paste the Rover message or notification:**")
         pasted_input = st.text_area(
-            "Texto copiado:",
-            placeholder="Ejemplo:\nFrom Sarah regarding Charlie:\nHi! Charlie is feeling better today, but please make sure he drinks water.",
+            "Copied text:",
+            placeholder="Example:\nFrom Sarah regarding Charlie:\nHi! Charlie is feeling better today, but please make sure he drinks water.",
             height=150
         )
-        if st.button("📥 Parsear y Cargar al Hub", use_container_width=True):
+        if st.button("📥 Parse and Load to Hub", use_container_width=True):
             if pasted_input.strip():
                 parsed = parse_rover_notification(pasted_input, source="paste")
                 st.session_state.client_name = parsed.client_name
                 st.session_state.pet_name = parsed.pet_name
                 st.session_state.email_snippet = parsed.body_snippet
-                st.success("¡Mensaje parseado y cargado correctamente!")
+                st.success("Message parsed and loaded successfully!")
                 st.rerun()
             else:
-                st.warning("Pega un mensaje antes de presionar el botón.")
+                st.warning("Please paste a message before clicking the button.")
 
-    elif input_method == "✉️ Conectar con Gmail":
-        st.markdown("**Sincronización con Gmail API:**")
+    elif input_method == "✉️ Connect with Gmail":
+        st.markdown("**Sync with Gmail API:**")
         
-        with st.expander("❓ ¿Cómo obtener tus credenciales?", expanded=False):
+        with st.expander("❓ How to get your credentials?", expanded=False):
             st.markdown("""
-            1. Ve a [Google Cloud Console](https://console.cloud.google.com/) y crea un proyecto.
-            2. En **APIs & Services**, habilita la **Gmail API**.
-            3. En **OAuth consent screen**, elige tipo *External*, añade tu email en *Test users* y el scope `gmail.readonly`.
-            4. En **Credentials** > **Create Credentials** > **OAuth client ID**, elige **Desktop app**.
-            5. Descarga el archivo JSON, renómbralo a `credentials.json` y súbelo aquí abajo o colócalo en la raíz del proyecto.
+            1. Open [Google Cloud Console](https://console.cloud.google.com/) and create a project.
+            2. Under **APIs & Services**, enable the **Gmail API**.
+            3. Under **OAuth consent screen**, select *External*, add your email under *Test users*, and add the scope `gmail.readonly`.
+            4. Under **Credentials** > **Create Credentials** > **OAuth client ID**, choose **Desktop app**.
+            5. Download the JSON, rename it to `credentials.json`, and upload it below or place it in the project root.
             
-            *(Consulta `GMAIL_MCP_SETUP.md` para el instructivo detallado).*
+            *(Refer to `GMAIL_MCP_SETUP.md` for full instructions).*
             """)
 
         creds_exist = os.path.exists("credentials.json") or os.path.exists("token.json")
-
         
         if not creds_exist:
             st.info(
-                "💡 Para sincronizar con Gmail, coloca tu archivo `credentials.json` en la raíz del proyecto. "
-                "También puedes subirlo aquí directamente:"
+                "💡 To sync with Gmail, place your `credentials.json` file in the project root or upload it directly here:"
             )
-            uploaded_creds = st.file_uploader("Subir credentials.json (OAuth Client)", type=["json"])
+            uploaded_creds = st.file_uploader("Upload credentials.json (OAuth Client)", type=["json"])
             if uploaded_creds:
                 with open("credentials.json", "wb") as f:
                     f.write(uploaded_creds.getbuffer())
-                st.success("`credentials.json` guardado con éxito. Ahora puedes sincronizar.")
+                st.success("`credentials.json` saved successfully. You can now import messages.")
                 st.rerun()
         else:
-            st.success(" Credenciales de Gmail detectadas.")
+            st.success(" Gmail credentials detected.")
 
-        if st.button("🔄 Importar Últimos Correos de Rover", use_container_width=True):
-            with st.spinner("Buscando correos de Rover en Gmail..."):
+        if st.button("🔄 Import Latest Rover Emails", use_container_width=True):
+            with st.spinner("Fetching Rover emails from Gmail..."):
                 gmail_msgs = fetch_messages_from_gmail()
                 if gmail_msgs:
                     st.session_state.gmail_msgs = gmail_msgs
-                    # Seleccionar el primer mensaje por defecto
                     first_msg = gmail_msgs[0]
                     st.session_state.client_name = first_msg.client_name
                     st.session_state.pet_name = first_msg.pet_name
                     st.session_state.email_snippet = first_msg.body_snippet
-                    st.success(f"Se importaron {len(gmail_msgs)} correos de Rover.")
+                    st.success(f"Imported {len(gmail_msgs)} Rover messages.")
                     st.rerun()
                 else:
-                    st.warning("No se encontraron correos recientes de Rover o se requiere autenticación.")
+                    st.warning("No recent Rover messages found or authentication required.")
 
         if "gmail_msgs" in st.session_state and st.session_state.gmail_msgs:
             options = [f"{m.client_name} ({m.pet_name}) - {m.subject[:30]}" for m in st.session_state.gmail_msgs]
             selected_idx = st.selectbox(
-                "Seleccionar mensaje importado:",
+                "Select imported message:",
                 range(len(options)),
                 format_func=lambda i: options[i]
             )
-            if st.button("Cargar seleccionado"):
+            if st.button("Load selected"):
                 msg = st.session_state.gmail_msgs[selected_idx]
                 st.session_state.client_name = msg.client_name
                 st.session_state.pet_name = msg.pet_name
@@ -115,11 +111,11 @@ with st.sidebar:
                 st.rerun()
 
     st.markdown("---")
-    st.subheader("✏️ Edición Rápida de Parámetros")
-    st.session_state.client_name = st.text_input("Nombre del Dueño (*Client Name*):", st.session_state.client_name)
-    st.session_state.pet_name = st.text_input("Nombre de la Mascota (*Pet's Name*):", st.session_state.pet_name)
+    st.subheader("✏️ Quick Parameter Adjustment")
+    st.session_state.client_name = st.text_input("Owner's Name (*Client Name*):", st.session_state.client_name)
+    st.session_state.pet_name = st.text_input("Pet's Name:", st.session_state.pet_name)
     st.session_state.email_snippet = st.text_area(
-        "Mensaje Activo:",
+        "Active Message:",
         st.session_state.email_snippet,
         height=100
     )
@@ -131,66 +127,72 @@ email_snippet = st.session_state.email_snippet
 col1, col2 = st.columns([1, 1])
 
 with col1:
-    st.subheader("📋 Paso 1 & 2: Diagnóstico y Estrategia")
+    st.subheader("📋 Step 1 & 2: Diagnosis & Strategy")
     data = evaluate_incident(email_snippet)
     
-    with st.expander("❓ Preguntas de Clarificación (Contexto Adicional)", expanded=True):
+    with st.expander("❓ Clarification Questions (Additional Context)", expanded=True):
         for i, q in enumerate(data["clarification_questions"], 1):
             st.write(f"**{i}.** {q}")
     
-    st.markdown("### 🚦 Semáforo de Impacto")
+    st.markdown("### 🚦 Impact Traffic Light")
     st.markdown(data["traffic_light"]["red"])
     st.markdown(data["traffic_light"]["yellow"])
     st.markdown(data["traffic_light"]["green"])
 
 with col2:
-    st.subheader("✍️ Paso 3: Opciones de Respuesta Lista (Copy-Paste)")
+    st.subheader("✍️ Step 3: Ready-to-Send Response Options")
     
-    tab1, tab2, tab3 = st.tabs(["Opción A (Concisa)", "Opción B (Detallada)", "Reporte Diario (Rover Card)"])
+    tab1, tab2, tab3 = st.tabs(["Option A (Concise)", "Option B (Detailed)", "Daily Report (Rover Card)"])
     
     with tab1:
-        st.markdown("**Variante A (Concisa y Directa):**")
+        st.markdown("**Variant A (Concise & Direct):**")
         text_a = data["response_variants"]["option_a"].replace("[Owner's Name]", client_name).replace("[Pet's Name]", pet_name)
         st.code(text_a, language="markdown")
-        st.button("Copiar Opción A", key="btn_a")
+        st.button("Copy Option A", key="btn_a")
         
     with tab2:
-        st.markdown("**Variante B (Detallada y Cálida):**")
+        st.markdown("**Variant B (Detailed & Warm):**")
         text_b = data["response_variants"]["option_b"].replace("[Owner's Name]", client_name).replace("[Pet's Name]", pet_name)
         st.code(text_b, language="markdown")
-        st.button("Copiar Opción B", key="btn_b")
+        st.button("Copy Option B", key="btn_b")
 
     with tab3:
-        st.markdown("**Plantilla de Rover Card:**")
-        card_template = f"Hi {client_name}! We had a fantastic session with {pet_name} today! 🐾\n- **Duration:** [Walk Duration]\n- **Activities:** Great potty routine, lots of sniff-time, and fresh water refilled.\n- **Mood:** Upbeat, attentive, and super friendly.\nAttached are a few photos from our adventure! Let me know if you need anything else!"
+        st.markdown("**Rover Card Template:**")
+        card_template = (
+            f"Hi {client_name}! We had a fantastic session with {pet_name} today! 🐾\n"
+            f"- **Duration:** [Walk Duration]\n"
+            f"- **Activities:** Great potty routine, lots of sniff-time, and fresh water refilled.\n"
+            f"- **Mood:** Upbeat, attentive, and super friendly.\n"
+            f"Attached are a few photos from our adventure! Let me know if you need anything else!"
+        )
         st.code(card_template, language="markdown")
 
 st.divider()
 
-# Sección de Traducción e Inspección Rápida
-st.subheader("🌐 Traducción y Ajustes Rápidos")
-user_draft_es = st.text_area(
-    "Borrador o ideas en español para adaptar:",
-    "Hola, Charlie estuvo un poco tímido al principio del paseo, pero después de 5 minutos comenzó a oler el parque y se le vio feliz. Todo en orden con sus necesidades.",
+# Message Polish and Tone Assistant Section
+st.subheader("✨ Message Refinement & Quick Polish")
+user_draft = st.text_area(
+    "Custom draft or quick notes to adapt:",
+    "Charlie was slightly shy at the beginning of the walk, but after 5 minutes he started sniffing around the park and looked very happy. Potty routine was completely normal.",
     height=100
 )
 
-if st.button("Traducir y Pulir al Estilo Rover"):
-    if user_draft_es.strip():
-        st.info("Adaptado al tono oficial de Rover (*warm, confident, casual yet polished*):")
+if st.button("Polish to Rover 5-Star Tone"):
+    if user_draft.strip():
+        st.info("Adapted to the official Rover tone (*warm, confident, casual yet polished*):")
         
         col_tr1, col_tr2 = st.columns(2)
         with col_tr1:
-            st.markdown("**🇺🇸 Versión en Inglés (Rover Standard 5-Stars):**")
+            st.markdown("**🌟 5-Star Polished Message:**")
             st.markdown(
                 f"> *\"Hi {client_name}! Just wanted to share that {pet_name} was a tiny bit shy right at the start of our walk, "
                 f"but within just 5 minutes he warmed up completely, had a wonderful time sniffing around the park, and looked so happy and relaxed! "
                 f"Potty routine was all normal and smooth. Looking forward to our next visit! 🐾\"*"
             )
         with col_tr2:
-            st.markdown("**✨ Puntos clave aplicados:**")
-            st.markdown("- Tono positivo y empático sin generar alarma.")
-            st.markdown("- Mención directa de bienestar y rutina.")
-            st.markdown("- Cierre cálido y cordial.")
+            st.markdown("**✨ Key Standards Applied:**")
+            st.markdown("- Positive, empathetic tone without causing unnecessary alarm.")
+            st.markdown("- Direct confirmation of routine and well-being.")
+            st.markdown("- Warm and appreciative closing.")
     else:
-        st.warning("Por favor introduce un texto o borrador en español.")
+        st.warning("Please enter a draft message to polish.")
