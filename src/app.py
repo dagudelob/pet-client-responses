@@ -1,5 +1,11 @@
+import os
+import sys
 import streamlit as st
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from analyzer import evaluate_incident
+from mail_listener import parse_rover_notification, fetch_messages_from_gmail
+
 
 st.set_page_config(
     page_title="Rover Client Response Hub",
@@ -7,19 +13,107 @@ st.set_page_config(
     layout="wide"
 )
 
+# Inicializar estado en sesión si no existe
+if "client_name" not in st.session_state:
+    st.session_state.client_name = "Sarah"
+if "pet_name" not in st.session_state:
+    st.session_state.pet_name = "Charlie"
+if "email_snippet" not in st.session_state:
+    st.session_state.email_snippet = (
+        "Hi! Charlie has a slightly sensitive stomach today, please keep an eye on him during the walk."
+    )
+
 st.title("🐾 Rover Client Assistant & Response Hub")
 st.caption("Asesor de comunicación y servicio al cliente de 5 estrellas para Rover")
 
-# Barra lateral: Simulación o Ingesta de Correo
+# Barra lateral: Ingesta de Correo (Gmail o Copiar y Pegar)
 with st.sidebar:
-    st.header("📬 Ingesta de Correo (Rover)")
-    client_name = st.text_input("Nombre del Dueño (*Client Name*):", "Sarah")
-    pet_name = st.text_input("Nombre de la Mascota (*Pet's Name*):", "Charlie")
-    email_snippet = st.text_area(
-        "Mensaje del Cliente / Notificación recibida:",
-        "Hi! Charlie has a slightly sensitive stomach today, please keep an eye on him during the walk."
+    st.header("📬 Ingesta de Mensajes de Rover")
+    
+    input_method = st.radio(
+        "Método de Entrada:",
+        ["📋 Pegar Texto / Copiar y Pegar", "✉️ Conectar con Gmail"],
+        index=0
     )
-    load_email_btn = st.button("Procesar Consulta")
+
+    if input_method == "📋 Pegar Texto / Copiar y Pegar":
+        st.markdown("**Pega la conversación o notificación de Rover:**")
+        pasted_input = st.text_area(
+            "Texto copiado:",
+            placeholder="Ejemplo:\nFrom Sarah regarding Charlie:\nHi! Charlie is feeling better today, but please make sure he drinks water.",
+            height=150
+        )
+        if st.button("📥 Parsear y Cargar al Hub", use_container_width=True):
+            if pasted_input.strip():
+                parsed = parse_rover_notification(pasted_input, source="paste")
+                st.session_state.client_name = parsed.client_name
+                st.session_state.pet_name = parsed.pet_name
+                st.session_state.email_snippet = parsed.body_snippet
+                st.success("¡Mensaje parseado y cargado correctamente!")
+                st.rerun()
+            else:
+                st.warning("Pega un mensaje antes de presionar el botón.")
+
+    elif input_method == "✉️ Conectar con Gmail":
+        st.markdown("**Sincronización con Gmail API:**")
+        creds_exist = os.path.exists("credentials.json") or os.path.exists("token.json")
+        
+        if not creds_exist:
+            st.info(
+                "💡 Para sincronizar con Gmail, coloca tu archivo `credentials.json` en la raíz del proyecto. "
+                "También puedes subirlo aquí directamente:"
+            )
+            uploaded_creds = st.file_uploader("Subir credentials.json (OAuth Client)", type=["json"])
+            if uploaded_creds:
+                with open("credentials.json", "wb") as f:
+                    f.write(uploaded_creds.getbuffer())
+                st.success("`credentials.json` guardado con éxito. Ahora puedes sincronizar.")
+                st.rerun()
+        else:
+            st.success(" Credenciales de Gmail detectadas.")
+
+        if st.button("🔄 Importar Últimos Correos de Rover", use_container_width=True):
+            with st.spinner("Buscando correos de Rover en Gmail..."):
+                gmail_msgs = fetch_messages_from_gmail()
+                if gmail_msgs:
+                    st.session_state.gmail_msgs = gmail_msgs
+                    # Seleccionar el primer mensaje por defecto
+                    first_msg = gmail_msgs[0]
+                    st.session_state.client_name = first_msg.client_name
+                    st.session_state.pet_name = first_msg.pet_name
+                    st.session_state.email_snippet = first_msg.body_snippet
+                    st.success(f"Se importaron {len(gmail_msgs)} correos de Rover.")
+                    st.rerun()
+                else:
+                    st.warning("No se encontraron correos recientes de Rover o se requiere autenticación.")
+
+        if "gmail_msgs" in st.session_state and st.session_state.gmail_msgs:
+            options = [f"{m.client_name} ({m.pet_name}) - {m.subject[:30]}" for m in st.session_state.gmail_msgs]
+            selected_idx = st.selectbox(
+                "Seleccionar mensaje importado:",
+                range(len(options)),
+                format_func=lambda i: options[i]
+            )
+            if st.button("Cargar seleccionado"):
+                msg = st.session_state.gmail_msgs[selected_idx]
+                st.session_state.client_name = msg.client_name
+                st.session_state.pet_name = msg.pet_name
+                st.session_state.email_snippet = msg.body_snippet
+                st.rerun()
+
+    st.markdown("---")
+    st.subheader("✏️ Edición Rápida de Parámetros")
+    st.session_state.client_name = st.text_input("Nombre del Dueño (*Client Name*):", st.session_state.client_name)
+    st.session_state.pet_name = st.text_input("Nombre de la Mascota (*Pet's Name*):", st.session_state.pet_name)
+    st.session_state.email_snippet = st.text_area(
+        "Mensaje Activo:",
+        st.session_state.email_snippet,
+        height=100
+    )
+
+client_name = st.session_state.client_name
+pet_name = st.session_state.pet_name
+email_snippet = st.session_state.email_snippet
 
 col1, col2 = st.columns([1, 1])
 
@@ -72,7 +166,6 @@ if st.button("Traducir y Pulir al Estilo Rover"):
     if user_draft_es.strip():
         st.info("Adaptado al tono oficial de Rover (*warm, confident, casual yet polished*):")
         
-        # Generación asistida de traducción/estilo adaptado
         col_tr1, col_tr2 = st.columns(2)
         with col_tr1:
             st.markdown("**🇺🇸 Versión en Inglés (Rover Standard 5-Stars):**")
