@@ -1,0 +1,28 @@
+{
+  "service": "Rover Client Care Protocol",
+  "tone": "Warm, confident, casual yet polished, empathetic, 5-star standard",
+  "guidelines": {
+    "red_avoid": [
+      "No sonar a la defensiva ni excusarse",
+      "No diagnosticar cuadros médicos ni recomendar medicación no prescrita",
+      "No criticar ni juzgar el entrenamiento o conducta previa de la mascota",
+      "No comprometerse a horarios o servicios extra sin confirmación previa"
+    ],
+    "yellow_monitor": [
+      "Cambios menores de apetito o digestión sensible",
+      "Leve timidez, energía baja o cambios en la rutina de paseos",
+      "Monitorear lenguaje corporal y registrar siempre con fotos de soporte"
+    ],
+    "green_prioritize": [
+      "Notificar oportunamente con tono proactivo y afable",
+      "Adjuntar material visual de calidad (fotos/videos felices)",
+      "Agradecer la confianza del dueño al cierre de cada interacción",
+      "Brindar tranquilidad con un plan de acción claro y seguro"
+    ]
+  },
+  "default_clarification_questions": [
+    "¿Tiene la mascota antecedentes médicos o sensibilidad conocida relevante para este caso?",
+    "¿Cuáles son las instrucciones específicas de alimentación, medicación o contacto de emergencia?",
+    "¿Cuál es el canal y nivel de frecuencia preferido por el dueño para recibir actualizaciones?"
+  ]
+}

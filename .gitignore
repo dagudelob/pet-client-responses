@@ -1,0 +1,27 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+
+# Streamlit
+.streamlit/
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+credentials.json
+token.json
+*secret*
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+*.swp

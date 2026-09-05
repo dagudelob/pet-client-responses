@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "gmail-rover-listener": {
+      "command": "python",
+      "args": ["-m", "src.mail_listener"],
+      "env": {
+        "ROVER_EMAIL_FILTER": "from:rover.com",
+        "FETCH_INTERVAL_MINUTES": "5"
+      },
+      "description": "MCP Server para conectar notificaciones e ingesta de mensajes de Rover a través de Gmail API"
+    }
+  }
+}
